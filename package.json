@@ -1,0 +1,13 @@
+{
+  "name": "superkernel-prime-stack",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "lint": "echo 'add solidity linters as needed'",
+    "deploy:prime": "npx hardhat run scripts/deploy_prime_chain.js --network localhost"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "hardhat": "^2.22.5"
+  }
+}
