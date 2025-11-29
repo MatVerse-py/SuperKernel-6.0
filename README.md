@@ -1,6 +1,6 @@
 # SuperKernel 6.0 — Núcleo Constitucional do MatVerse
 
-SuperKernel 6.0 é o **núcleo constitucional antifrágil** do MatVerse: um kernel vivo, auto-reescrevível e matematicamente verificável. Ele só evolui quando a ordem aumenta, a topologia permanece íntegra e o jerk semântico continua seguro. Este README consolida visão, matemática, componentes, execução, garantias e o roadmap para o salto 7.x.
+SuperKernel 6.0 é o **núcleo constitucional antifrágil** do MatVerse: um kernel vivo, auto-reescrevível e matematicamente verificável. Ele só evolui quando a ordem aumenta, a topologia permanece íntegra e o jerk semântico continua seguro. Este README consolida visão, matemática, componentes, execução, garantias e o roadmap para o salto 7.x e referencia o documento soberano final: [`SUPERKERNEL_CONSTITUTION.md`](./SUPERKERNEL_CONSTITUTION.md).
 
 ---
 
