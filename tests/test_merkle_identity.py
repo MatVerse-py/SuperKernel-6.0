@@ -4,24 +4,8 @@ from src.identity.merkle_identity import (
     IdentityRecord,
     build_merkle_proof,
     build_merkle_root,
+    verify_merkle_proof,
 )
-
-
-def _solidity_verify(proof, root, leaf):
-    computed = leaf
-    for element in proof:
-        if computed <= element:
-            computed = _keccak_pair(computed, element)
-        else:
-            computed = _keccak_pair(element, computed)
-    return computed == root
-
-
-def _keccak_pair(left: bytes, right: bytes) -> bytes:
-    from Crypto.Hash import keccak
-
-    digest = keccak.new(data=left + right, digest_bits=256)
-    return digest.digest()
 
 
 def test_merkle_root_is_deterministic():
@@ -50,7 +34,7 @@ def test_proof_matches_solidity_contract_logic():
     proof = build_merkle_proof(records, target_index)
     root = build_merkle_root(records)
 
-    assert _solidity_verify(proof, root, target_leaf)
+    assert verify_merkle_proof(proof, root, target_leaf)
     assert len(proof) == 2
 
 

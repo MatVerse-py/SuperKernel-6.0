@@ -104,6 +104,18 @@ def build_merkle_proof(records: Iterable[IdentityRecord], index: int) -> List[by
     return proof
 
 
+def verify_merkle_proof(proof: Iterable[bytes], root: bytes, leaf: bytes) -> bool:
+    """Verify a Merkle proof using the same ordering rule as the Solidity helper."""
+
+    computed = leaf
+    for sibling in proof:
+        if computed <= sibling:
+            computed = _hash_pair(computed, sibling)
+        else:
+            computed = _hash_pair(sibling, computed)
+    return computed == root
+
+
 def demo_root() -> str:
     """Return a hex Merkle root for three sample identity records."""
     sample = [
