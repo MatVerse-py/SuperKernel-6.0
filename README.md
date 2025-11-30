@@ -34,6 +34,10 @@ package.json                    # dev dependencies + scripts
 
 ### Python dependencies
 
+The Merkle tooling vendors a pure-Python Keccak-256 implementation, so no
+external crypto wheels are needed. Install the lightweight dev dependencies for
+testing:
+
 ```bash
 pip install -r requirements.txt
 ```

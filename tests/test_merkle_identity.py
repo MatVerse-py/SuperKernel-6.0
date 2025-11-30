@@ -9,6 +9,7 @@ from src.identity.merkle_identity import (
     verify_merkle_proof,
     verify_merkle_proof_hex,
 )
+from src.identity.keccak import keccak_256
 
 
 def test_merkle_root_is_deterministic():
@@ -71,3 +72,9 @@ def test_hex_helpers_round_trip_against_bytes_interfaces():
     assert proof_hex == [node.hex() for node in proof_bytes]
     assert verify_merkle_proof(proof_bytes, root_bytes, leaf_bytes)
     assert verify_merkle_proof_hex(proof_hex, root_hex, leaf_hex)
+
+
+def test_keccak256_matches_reference_vector():
+    # Reference digest generated via Solidity's keccak256("abc")
+    expected = "4e03657aea45a94fc7d47ba826c8d667c0d1e6e33a64a036ec44f58fa12d6c45"
+    assert keccak_256(b"abc").hex() == expected

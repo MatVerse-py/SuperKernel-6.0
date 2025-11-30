@@ -11,7 +11,7 @@ import json
 from dataclasses import dataclass
 from typing import Iterable, List
 
-from Crypto.Hash import keccak
+from src.identity.keccak import keccak_256
 
 
 def _strip_0x(hex_string: str) -> str:
@@ -23,7 +23,7 @@ def _strip_0x(hex_string: str) -> str:
 def _keccak_bytes(payload: bytes) -> bytes:
     """Return the Keccak-256 digest for raw bytes."""
 
-    return keccak.new(data=payload, digest_bits=256).digest()
+    return keccak_256(payload)
 
 
 def _hash_pair(left: bytes, right: bytes) -> bytes:
