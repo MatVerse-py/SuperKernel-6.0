@@ -14,6 +14,12 @@ from typing import Iterable, List
 from Crypto.Hash import keccak
 
 
+def _strip_0x(hex_string: str) -> str:
+    """Remove a leading ``0x`` from a hex string when present."""
+
+    return hex_string[2:] if hex_string.startswith("0x") else hex_string
+
+
 def _keccak_bytes(payload: bytes) -> bytes:
     """Return the Keccak-256 digest for raw bytes."""
 
@@ -104,6 +110,18 @@ def build_merkle_proof(records: Iterable[IdentityRecord], index: int) -> List[by
     return proof
 
 
+def build_merkle_root_hex(records: Iterable[IdentityRecord]) -> str:
+    """Compute a Merkle root and return it as a hex string without ``0x``."""
+
+    return build_merkle_root(records).hex()
+
+
+def build_merkle_proof_hex(records: Iterable[IdentityRecord], index: int) -> List[str]:
+    """Return a Merkle proof encoded as hex strings without ``0x``."""
+
+    return [node.hex() for node in build_merkle_proof(records, index)]
+
+
 def verify_merkle_proof(proof: Iterable[bytes], root: bytes, leaf: bytes) -> bool:
     """Verify a Merkle proof using the same ordering rule as the Solidity helper."""
 
@@ -114,6 +132,15 @@ def verify_merkle_proof(proof: Iterable[bytes], root: bytes, leaf: bytes) -> boo
         else:
             computed = _hash_pair(sibling, computed)
     return computed == root
+
+
+def verify_merkle_proof_hex(proof_hex: Iterable[str], root_hex: str, leaf_hex: str) -> bool:
+    """Verify a hex-encoded proof and root using the Solidity-compatible hashing rule."""
+
+    proof_bytes = [bytes.fromhex(_strip_0x(sibling)) for sibling in proof_hex]
+    root_bytes = bytes.fromhex(_strip_0x(root_hex))
+    leaf_bytes = bytes.fromhex(_strip_0x(leaf_hex))
+    return verify_merkle_proof(proof_bytes, root_bytes, leaf_bytes)
 
 
 def demo_root() -> str:

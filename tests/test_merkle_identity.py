@@ -4,7 +4,10 @@ from src.identity.merkle_identity import (
     IdentityRecord,
     build_merkle_proof,
     build_merkle_root,
+    build_merkle_proof_hex,
+    build_merkle_root_hex,
     verify_merkle_proof,
+    verify_merkle_proof_hex,
 )
 
 
@@ -46,3 +49,25 @@ def test_proof_input_validation():
 
     with pytest.raises(ValueError):
         build_merkle_proof([], 0)
+
+
+def test_hex_helpers_round_trip_against_bytes_interfaces():
+    records = [
+        IdentityRecord("0xabc", "0xdef", "0x123", 1),
+        IdentityRecord("0xaaa", "0xbbb", "0xccc", 2),
+        IdentityRecord("0x111", "0x222", "0x333", 3),
+    ]
+
+    idx = 2
+    root_bytes = build_merkle_root(records)
+    proof_bytes = build_merkle_proof(records, idx)
+    leaf_bytes = records[idx].to_leaf()
+
+    root_hex = build_merkle_root_hex(records)
+    proof_hex = build_merkle_proof_hex(records, idx)
+    leaf_hex = leaf_bytes.hex()
+
+    assert root_hex == root_bytes.hex()
+    assert proof_hex == [node.hex() for node in proof_bytes]
+    assert verify_merkle_proof(proof_bytes, root_bytes, leaf_bytes)
+    assert verify_merkle_proof_hex(proof_hex, root_hex, leaf_hex)
