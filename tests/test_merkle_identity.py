@@ -48,8 +48,16 @@ def test_proof_input_validation():
     with pytest.raises(IndexError):
         build_merkle_proof(records, 2)
 
+    with pytest.raises(IndexError):
+        build_merkle_proof(records, -1)
+
     with pytest.raises(ValueError):
         build_merkle_proof([], 0)
+
+
+def test_merkle_root_requires_identities():
+    with pytest.raises(ValueError):
+        build_merkle_root([])
 
 
 def test_hex_helpers_round_trip_against_bytes_interfaces():

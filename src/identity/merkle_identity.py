@@ -26,6 +26,19 @@ def _keccak_bytes(payload: bytes) -> bytes:
     return keccak_256(payload)
 
 
+def _leaves_from_records(records: Iterable[IdentityRecord]) -> List[bytes]:
+    """Serialize identity records into Keccak-256 leaves.
+
+    A shared helper keeps validation consistent between root and proof builders
+    so empty identity sets surface the same error message.
+    """
+
+    leaves = [record.to_leaf() for record in records]
+    if not leaves:
+        raise ValueError("At least one identity is required to build a Merkle tree")
+    return leaves
+
+
 def _hash_pair(left: bytes, right: bytes) -> bytes:
     """Hash an ordered pair of nodes to mirror Solidity's ``keccak256`` tree.
 
@@ -61,9 +74,7 @@ class IdentityRecord:
 
 def build_merkle_root(records: Iterable[IdentityRecord]) -> bytes:
     """Compute a Keccak-256 Merkle root for the provided identities."""
-    leaves: List[bytes] = [record.to_leaf() for record in records]
-    if not leaves:
-        raise ValueError("At least one identity is required to build a Merkle root")
+    leaves: List[bytes] = _leaves_from_records(records)
 
     level = leaves
     while len(level) > 1:
@@ -82,9 +93,7 @@ def build_merkle_proof(records: Iterable[IdentityRecord], index: int) -> List[by
     The proof ordering matches ``IdentityMerkle.verify`` (ordered hashing).
     """
 
-    leaves: List[bytes] = [record.to_leaf() for record in records]
-    if not leaves:
-        raise ValueError("At least one identity is required to build a Merkle proof")
+    leaves: List[bytes] = _leaves_from_records(records)
     if index < 0 or index >= len(leaves):
         raise IndexError("Index out of range for provided identities")
 
