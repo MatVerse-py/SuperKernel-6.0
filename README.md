@@ -19,7 +19,7 @@ contracts/
   NegU.sol                # entropy-reactive ERC-20
   OracleMock.sol          # local dev oracle for Ω-score
 src/
-  identity/merkle_identity.py   # SHA3-256 Merkle root builder for identities
+  identity/merkle_identity.py   # Keccak-256 Merkle root/proof builder + verifier
   prime_chain/block_builder.py  # block prototype wiring Merkle + prime challenge
   eng/hamiltonian_complete.py   # symbolic Hamiltonian density (tensorial)
   eng/persistent_homology.py    # ripser-based H0/H1/H2 and robustness metric
@@ -32,9 +32,31 @@ package.json                    # dev dependencies + scripts
 
 ## Usage
 
+### Python dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
 ### Build an identity Merkle root
 ```
 python -m src.identity.merkle_identity
+```
+
+Hex helpers are available when coordinating with Solidity callers:
+
+```python
+from src.identity.merkle_identity import (
+    IdentityRecord,
+    build_merkle_root_hex,
+    build_merkle_proof_hex,
+    verify_merkle_proof_hex,
+)
+
+records = [IdentityRecord("0xabc", "0xdef", "0x123", 1)]
+root_hex = build_merkle_root_hex(records)
+proof_hex = build_merkle_proof_hex(records, 0)
+assert verify_merkle_proof_hex(proof_hex, root_hex, records[0].to_leaf().hex())
 ```
 
 ### Prototype a block off-chain
