@@ -1,23 +1,35 @@
 """Identity Merkle tree builder for Captals Prime Chain.
 
 Each identity couples biometric and digital material and is hashed into a
-SHA3-256 leaf. The resulting Merkle root is submitted to the chain and later
-proved with on-chain proofs through the IdentityMerkle library.
+Keccak-256 leaf (the same primitive Solidity exposes through ``keccak256``).
+The resulting Merkle root is submitted to the chain and later proved with
+on-chain proofs through the ``IdentityMerkle`` library.
 """
 from __future__ import annotations
 
-import hashlib
 import json
 from dataclasses import dataclass
 from typing import Iterable, List
 
-
-def _sha3_hex(payload: str) -> str:
-    return hashlib.sha3_256(payload.encode()).hexdigest()
+from Crypto.Hash import keccak
 
 
-def _sha3_bytes(payload: bytes) -> bytes:
-    return hashlib.sha3_256(payload).digest()
+def _keccak_bytes(payload: bytes) -> bytes:
+    """Return the Keccak-256 digest for raw bytes."""
+
+    return keccak.new(data=payload, digest_bits=256).digest()
+
+
+def _hash_pair(left: bytes, right: bytes) -> bytes:
+    """Hash an ordered pair of nodes to mirror Solidity's ``keccak256`` tree.
+
+    Solidity's ``IdentityMerkle.verify`` sorts each sibling pair before hashing;
+    we mirror that here so off-chain roots and proofs match on-chain checks.
+    """
+
+    if left > right:
+        left, right = right, left
+    return _keccak_bytes(left + right)
 
 
 @dataclass
@@ -38,11 +50,11 @@ class IdentityRecord:
             sort_keys=True,
             separators=(",", ":"),
         )
-        return _sha3_bytes(serialized.encode())
+        return _keccak_bytes(serialized.encode())
 
 
 def build_merkle_root(records: Iterable[IdentityRecord]) -> bytes:
-    """Compute a SHA3-256 Merkle root for the provided identities."""
+    """Compute a Keccak-256 Merkle root for the provided identities."""
     leaves: List[bytes] = [record.to_leaf() for record in records]
     if not leaves:
         raise ValueError("At least one identity is required to build a Merkle root")
@@ -53,10 +65,43 @@ def build_merkle_root(records: Iterable[IdentityRecord]) -> bytes:
         for i in range(0, len(level), 2):
             left = level[i]
             right = level[i + 1] if i + 1 < len(level) else left
-            combined = hashlib.sha3_256(left + right).digest()
-            next_level.append(combined)
+            next_level.append(_hash_pair(left, right))
         level = next_level
     return level[0]
+
+
+def build_merkle_proof(records: Iterable[IdentityRecord], index: int) -> List[bytes]:
+    """Generate a Merkle inclusion proof for the record at ``index``.
+
+    The proof ordering matches ``IdentityMerkle.verify`` (ordered hashing).
+    """
+
+    leaves: List[bytes] = [record.to_leaf() for record in records]
+    if not leaves:
+        raise ValueError("At least one identity is required to build a Merkle proof")
+    if index < 0 or index >= len(leaves):
+        raise IndexError("Index out of range for provided identities")
+
+    level = leaves
+    proof: List[bytes] = []
+    idx = index
+
+    while len(level) > 1:
+        next_level: List[bytes] = []
+        for i in range(0, len(level), 2):
+            left = level[i]
+            right = level[i + 1] if i + 1 < len(level) else left
+
+            if i == idx - (idx % 2):
+                sibling = right if idx % 2 == 0 else left
+                proof.append(sibling)
+
+            next_level.append(_hash_pair(left, right))
+
+        level = next_level
+        idx //= 2
+
+    return proof
 
 
 def demo_root() -> str:
